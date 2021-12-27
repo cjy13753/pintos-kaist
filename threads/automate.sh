@@ -3,15 +3,15 @@
 # 돌리고 싶은 테스트의 경우 주석 처리를 해제하세요.
 
 declare -a tests=(
-    "alarm-single" 
-    "alarm-multiple"
-    "alarm-simultaneous"
-    "alarm-zero"
-    "alarm-negative"
+    # "alarm-single" 
+    # "alarm-multiple"
+    # "alarm-simultaneous"
+    # "alarm-zero"
+    # "alarm-negative"
     "alarm-priority"
 
-    # "priority-fifo"
-    # "priority-preempt"
+    "priority-fifo"
+    "priority-preempt"
     # "priority-change"
     # "priority-donate-one"
     # "priority-donate-multiple"
