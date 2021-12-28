@@ -35,7 +35,7 @@ declare -a tests=(
 )
 
 make clean
-cd threads
+source ../activate
 make
 cd build
 
