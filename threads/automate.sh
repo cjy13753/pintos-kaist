@@ -4,20 +4,20 @@
 
 declare -a tests=(
     # A. alarm clock 과제 테스트용
-    # "alarm-single"
-    # "alarm-multiple"
-    # "alarm-simultaneous"
-    # "alarm-zero"
-    # "alarm-negative"
+    "alarm-single"
+    "alarm-multiple"
+    "alarm-simultaneous"
+    "alarm-zero"
+    "alarm-negative"
     
     # B. priority scheduling 과제 테스트용(priority 1)
-    # "alarm-priority"
-    # "priority-fifo"
-    # "priority-preempt"
+    "alarm-priority"
+    "priority-fifo"
+    "priority-preempt"
     
     # C. priority-synchronization 과제 테스트용(priority 2)
     "priority-sema"
-    # "priority-condvar"
+    "priority-condvar"
     
     # D. Priority Inversion 과제 테스트용(priority 3)
     # "priority-change"
