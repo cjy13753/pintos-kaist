@@ -98,6 +98,12 @@ struct thread {
 	/* tick in which this thread needs to wake up */
 	int64_t wakeup_tick;
 
+	int original_priority;
+	struct lock *lock_to_wait_on;
+	/* list of threads that have donated their priorities to this thread */
+	struct list donators_list;
+	struct list_elem d_elem;
+
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint64_t *pml4;                     /* Page map level 4 */
@@ -157,5 +163,9 @@ int64_t get_next_tick_to_awake(void); /* thread.c의 next_tick_to_awake 반환 *
  */
 void test_max_priority(void);
 bool cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED);
+
+void donate_priority(void);
+void remove_with_lock(struct lock *lock);
+void refresh_priority(void);
 
 #endif /* threads/thread.h */

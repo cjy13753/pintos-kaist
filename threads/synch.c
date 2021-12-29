@@ -66,7 +66,7 @@ sema_down (struct semaphore *sema) {
 
 	old_level = intr_disable ();
 	while (sema->value == 0) {
-		list_insert_ordered (&sema->waiters, &thread_current ()->elem, cmp_priority, NULL);
+		list_push_back (&sema->waiters, &thread_current ()->elem);
 		thread_block ();
 	}
 	sema->value--;
@@ -109,9 +109,12 @@ sema_up (struct semaphore *sema) {
 	ASSERT (sema != NULL);
 
 	old_level = intr_disable ();
-	if (!list_empty (&sema->waiters))
+	if (!list_empty (&sema->waiters)) {
+		list_sort(&sema->waiters, cmp_priority, 0);
+		ASSERT (!list_empty(&sema->waiters));
 		thread_unblock (list_entry (list_pop_front (&sema->waiters),
 					struct thread, elem));
+	}
 	sema->value++;
 	test_max_priority();
 	intr_set_level (old_level);
@@ -189,8 +192,17 @@ lock_acquire (struct lock *lock) {
 	ASSERT (!intr_context ());
 	ASSERT (!lock_held_by_current_thread (lock));
 
+	struct thread *curr = thread_current();
+	
+	if (lock->holder) {
+		curr->lock_to_wait_on = lock;
+		list_push_back(&lock->holder->donators_list, &curr->d_elem);
+		donate_priority();
+	}
+
 	sema_down (&lock->semaphore);
-	lock->holder = thread_current ();
+	curr->lock_to_wait_on = NULL;
+	lock->holder = curr;
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -223,6 +235,8 @@ lock_release (struct lock *lock) {
 	ASSERT (lock != NULL);
 	ASSERT (lock_held_by_current_thread (lock));
 
+	remove_with_lock(lock);
+	refresh_priority();
 	lock->holder = NULL;
 	sema_up (&lock->semaphore);
 }
@@ -336,4 +350,58 @@ bool cmp_sem_priority (const struct list_elem *a, const struct list_elem *b, voi
 	struct thread *sb_t = list_entry(sb_e, struct thread, elem);
 
 	return (sa_t->priority) > (sb_t->priority);
+}
+
+void donate_priority(void)
+{
+	int depth;
+	struct thread *t = thread_current();
+	struct thread *holder;
+
+	for (depth = 0; depth < 8; depth++) {
+		if (!t->lock_to_wait_on) break;
+		holder = t->lock_to_wait_on->holder;
+		holder->priority = t->priority;
+		t = holder;
+	}
+}
+
+/* LOCK을 release함과 동시에 해당 LOCK을 얻기 위해 priority를 기부했던
+   donator threads들을 LOCK을 release하는 thread의 donators' list에서 제거해준다.
+ */
+void remove_with_lock(struct lock *lock)
+{
+	struct thread *cur = thread_current();
+	struct list_elem *e;
+	struct thread *t;
+
+	for (e = list_begin(&cur->donators_list); e != list_end(&cur->donators_list);) {
+		t = list_entry(e, struct thread, d_elem);
+		e = list_next(e);
+		if (t->lock_to_wait_on == lock) {
+			list_remove(&t->d_elem);
+		}
+	}
+
+}
+void refresh_priority(void)
+{
+	struct thread *cur = thread_current();
+	cur->priority = cur->original_priority;
+
+	if (!list_empty(&cur->donators_list)) {
+		list_sort(&cur->donators_list, cmp_donator_priority, NULL);
+		struct thread *top_pri_donator = list_entry(list_front(&cur->donators_list), struct thread, d_elem);
+		if (top_pri_donator->priority > cur->priority) {
+			cur->priority = top_pri_donator->priority;
+		}
+	}
+}
+
+bool cmp_donator_priority (const struct list_elem *new, const struct list_elem *existing, void *aux)
+{
+	struct thread *new_donator = list_entry(new, struct thread, d_elem);
+	struct thread *existing_donator = list_entry(existing, struct thread, d_elem);
+
+	return new_donator->priority > existing_donator->priority ? 1 : 0;
 }

@@ -20,14 +20,14 @@ declare -a tests=(
     "priority-condvar"
     
     # D. Priority Inversion 과제 테스트용(priority 3)
-    # "priority-change"
-    # "priority-donate-one"
-    # "priority-donate-multiple"
-    # "priority-donate-multiple2"
-    # "priority-donate-nest"
-    # "priority-donate-sema"
-    # "priority-donate-lower"
-    # "priority-donate-chain"
+    "priority-change"
+    "priority-donate-one"
+    "priority-donate-multiple"
+    "priority-donate-multiple2"
+    "priority-donate-nest"
+    "priority-donate-sema"
+    "priority-donate-lower"
+    "priority-donate-chain"
     
     # D. MLFQS 과제 테스트용
     # "mlfqs-load-1"

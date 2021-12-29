@@ -324,8 +324,9 @@ thread_yield (void) {
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) {
-	thread_current ()->priority = new_priority;
-
+	thread_current ()->original_priority = new_priority;
+	
+	refresh_priority();
 	test_max_priority();	
 }
 
@@ -424,6 +425,9 @@ init_thread (struct thread *t, const char *name, int priority) {
 	t->tf.rsp = (uint64_t) t + PGSIZE - sizeof (void *);
 	t->priority = priority;
 	t->magic = THREAD_MAGIC;
+	t->original_priority = priority;
+	list_init(&t->donators_list);
+	t->lock_to_wait_on = NULL;
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should
@@ -677,3 +681,4 @@ bool cmp_priority (const struct list_elem *a, const struct list_elem *b, void *a
 
 	return thread_a->priority > thread_b->priority ? 1 : 0;
 }
+
